@@ -2,7 +2,11 @@ import asyncio
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.middlewares.request_logging import logger
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+
 from loader import db
+from utils.tasks import send_random_food
 
 
 def setup_handlers(dispatcher: Dispatcher) -> None:
@@ -41,7 +45,7 @@ async def database_connected():
     await db.create()
 
 
-async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
+async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot, scheduler: AsyncIOScheduler) -> None:
     from utils.set_bot_commands import set_default_commands
     from utils.notify_admins import on_startup_notify
 
@@ -54,9 +58,13 @@ async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
     await on_startup_notify(bot=bot)
     await set_default_commands(bot=bot)
 
+    scheduler.add_job(send_random_food, CronTrigger(hour=11, minute=30), kwargs={"bot": bot})
+    scheduler.start()
 
-async def aiogram_on_shutdown_polling(dispatcher: Dispatcher, bot: Bot):
+
+async def aiogram_on_shutdown_polling(dispatcher: Dispatcher, bot: Bot, scheduler: AsyncIOScheduler):
     logger.info("Stopping polling")
+    scheduler.shutdown(wait=False)
     await bot.session.close()
     await dispatcher.storage.close()
 
@@ -71,6 +79,8 @@ def main():
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     storage = MemoryStorage()
     dispatcher = Dispatcher(storage=storage)
+
+    dispatcher["scheduler"] = AsyncIOScheduler()
 
     dispatcher.startup.register(aiogram_on_startup_polling)
     dispatcher.shutdown.register(aiogram_on_shutdown_polling)

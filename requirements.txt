@@ -39,3 +39,4 @@ typing_extensions==4.7.1
 tzdata==2024.1
 yarl==1.9.2
 gunicorn==22.0.0
+apscheduler==3.10.4
