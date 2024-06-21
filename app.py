@@ -58,7 +58,7 @@ async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot, scheduler
     await on_startup_notify(bot=bot)
     await set_default_commands(bot=bot)
 
-    scheduler.add_job(send_random_food, CronTrigger(hour=11, minute=30), kwargs={"bot": bot})
+    scheduler.add_job(send_random_food, CronTrigger(hour=12, minute=00), kwargs={"bot": bot})
     scheduler.start()
 
 
