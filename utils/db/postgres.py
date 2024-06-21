@@ -59,7 +59,7 @@ class Database:
         return await self.execute(sql, fetch=True)
 
     async def select_all_foods(self):
-        sql = "SELECT name FROM foods"
+        sql = "SELECT * FROM foods"
         return await self.execute(sql, fetch=True)
 
     async def select_user(self, **kwargs):
