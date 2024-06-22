@@ -63,6 +63,7 @@ async def add_food(message: types.Message, state: FSMContext):
                 "Menu:",
                 reply_markup=markup,
             )
+            await state.set_state(UserState.menu)
         else:
             await message.answer(
                 f"Bosh sahifa",
