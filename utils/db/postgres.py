@@ -75,8 +75,8 @@ class Database:
         return await self.execute(sql, fetch=True)
 
     async def select_user_foods(self, user_id: int):
-        sql = "SELECT * FROM user_foods"
-        return await self.execute(sql, fetch=True)
+        sql = "SELECT * FROM user_foods WHERE user_id=$1"
+        return await self.execute(sql, user_id, fetch=True)
 
     async def select_user(self, **kwargs):
         sql = "SELECT * FROM telegram_users WHERE "
