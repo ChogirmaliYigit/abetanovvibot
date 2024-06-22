@@ -23,15 +23,18 @@ async def do_start(message: types.Message):
         logger.info(error)
     if user:
         count = await db.count_users()
-        msg = f"[{make_title(user['full_name'])}](tg://user?id={user['telegram_id']}) bazaga qo'shildi\.\nBazada {count} ta foydalanuvchi bor\."
+        user_link = f"https://t.me/{username}" if username else f"tg://user?id={user['telegram_id']}"
+        msg = f"[{make_title(user['full_name'])}]({user_link}) bazaga qo'shildi\.\nBazada {count} ta foydalanuvchi bor\."
     else:
-        msg = f"[{make_title(full_name)}](tg://user?id={telegram_id}) bazaga oldin qo'shilgan"
+        user_link = f"https://t.me/{username}" if username else f"tg://user?id={telegram_id}"
+        msg = f"[{make_title(full_name)}]({user_link}) bazaga oldin qo'shilgan"
     for admin in ADMINS:
         try:
             await bot.send_message(
                 chat_id=admin,
                 text=msg,
-                parse_mode=ParseMode.MARKDOWN_V2
+                parse_mode=ParseMode.MARKDOWN_V2,
+                disable_web_page_preview=True,
             )
         except Exception as error:
             logger.info(f"Data did not send to admin: {admin}. Error: {error}")

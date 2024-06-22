@@ -3,6 +3,7 @@ from typing import Union
 import asyncpg
 from asyncpg import Connection
 from asyncpg.pool import Pool
+from datetime import datetime
 
 from data import config
 
@@ -51,8 +52,19 @@ class Database:
         return sql, tuple(parameters.values())
 
     async def add_user(self, full_name, username, telegram_id):
-        sql = "INSERT INTO telegram_users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
-        return await self.execute(sql, full_name, username, telegram_id, fetchrow=True)
+        sql = "INSERT INTO telegram_users (full_name, username, telegram_id, created_at, updated_at) VALUES($1, $2, $3, $4, $5) returning *"
+        return await self.execute(sql, full_name, username, telegram_id, datetime.now(), datetime.now(), fetchrow=True)
+
+    async def add_food(self, user_id: int, name: str):
+        sql = "SELECT * FROM foods WHERE name=$1"
+        result = await self.execute(sql, name, fetchrow=True)
+        if not result:
+            await self.execute(
+                "INSERT INTO foods (name, created_at, updated_at) VALUES ($1, $2, $3)",
+                name, datetime.now(), datetime.now(), fetchrow=True
+            )
+        sql = "INSERT INTO user_foods (user_id, name, created_at, updated_at) VALUES ($1, $2, $3, $4) RETURNING *"
+        return await self.execute(sql, user_id, name, datetime.now(), datetime.now(), fetchrow=True)
 
     async def select_all_users(self):
         sql = "SELECT * FROM telegram_users"
@@ -60,6 +72,10 @@ class Database:
 
     async def select_all_foods(self):
         sql = "SELECT * FROM foods"
+        return await self.execute(sql, fetch=True)
+
+    async def select_user_foods(self, user_id: int):
+        sql = "SELECT * FROM user_foods"
         return await self.execute(sql, fetch=True)
 
     async def select_user(self, **kwargs):
