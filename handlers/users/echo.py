@@ -12,13 +12,18 @@ router = Router()
 
 
 @router.callback_query(F.data == "get_random_food")
-async def random_a_food(call: types.CallbackQuery):
+async def random_a_food(call: types.CallbackQuery, state: FSMContext):
     user = await db.select_user(telegram_id=call.from_user.id)
-    random_food = random.choice(await db.select_user_foods(user.get("id")))
-    await call.message.edit_text(
-        f"Tanlangan ovqat: <b>{random_food.get('name')}</b>",
-        reply_markup=get_random_food_markup,
-    )
+    user_foods = await db.select_user_foods(user.get("id"))
+    if user_foods:
+        random_food = random.choice(user_foods)
+        await call.message.edit_text(
+            f"Tanlangan ovqat: <b>{random_food.get('name')}</b>",
+            reply_markup=get_random_food_markup,
+        )
+    else:
+        await call.message.edit_text("Sizning menuga hali taom qo'shilmagan. Taom qo'shish uchun uning nomini yozing.")
+        await state.set_state(UserState.add_food)
 
 
 @router.callback_query(F.data == "see_menu")
