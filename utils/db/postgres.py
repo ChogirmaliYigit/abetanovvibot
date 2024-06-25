@@ -91,8 +91,15 @@ class Database:
         sql = "UPDATE telegram_users SET username=$1 WHERE telegram_id=$2"
         return await self.execute(sql, username, telegram_id, execute=True)
 
+    async def update_food_name(self, name, food_id):
+        sql = "UPDATE user_foods SET name=$1 WHERE id=$2"
+        return await self.execute(sql, name, food_id, execute=True)
+
     async def delete_users(self):
         await self.execute("DELETE FROM telegram_users WHERE TRUE", execute=True)
+
+    async def delete_food(self, food_id: int):
+        await self.execute("DELETE FROM user_foods WHERE id=$1", food_id, execute=True)
 
     async def drop_users(self):
         await self.execute("DROP TABLE telegram_users", execute=True)

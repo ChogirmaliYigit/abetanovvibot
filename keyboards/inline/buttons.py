@@ -30,6 +30,8 @@ async def get_menu_markup(user_id: int):
     for food in await db.select_user_foods(user_id):
         keyboard.append([
             InlineKeyboardButton(text=food.get("name"), callback_data=str(food.get("id"))),
+            InlineKeyboardButton(text="O'zgartirish", callback_data=f"change_{food.get('id')}"),
+            InlineKeyboardButton(text="O'chirish", callback_data=f"delete_{food.get('id')}"),
         ])
     if keyboard:
         keyboard.append([random_food_button, add_food_button])
