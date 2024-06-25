@@ -16,12 +16,15 @@ async def do_start(message: types.Message):
     telegram_id = message.from_user.id
     full_name = message.from_user.full_name
     username = message.from_user.username
-    user = None
-    try:
-        user = await db.add_user(telegram_id=telegram_id, full_name=full_name, username=username)
-    except Exception as error:
-        logger.info(error)
+    user = await db.select_user(telegram_id=telegram_id)
+    if not user:
+        try:
+            user = await db.add_user(telegram_id=telegram_id, full_name=full_name, username=username)
+        except Exception as error:
+            logger.info(error)
     if user:
+        if not user.get("is_active"):
+            await db.update_is_active(telegram_id)
         count = await db.count_users()
         user_link = f"https://t.me/{username}" if username else f"tg://user?id={user['telegram_id']}"
         msg = f"[{make_title(user['full_name'])}]({user_link}) bazaga qo'shildi\.\nBazada {count} ta foydalanuvchi bor\."

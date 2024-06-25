@@ -12,6 +12,7 @@ class FoodAdmin(ModelAdmin):
 
 @admin.register(TelegramUser)
 class TelegramUserAdmin(ModelAdmin):
-    list_display = ("id", "telegram_id", "full_name", "username",)
+    list_display = ("id", "telegram_id", "full_name", "username", "is_active")
     fields = list_display
     search_fields = list_display
+    list_filter = ("is_active",)

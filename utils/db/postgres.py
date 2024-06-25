@@ -51,9 +51,9 @@ class Database:
         )
         return sql, tuple(parameters.values())
 
-    async def add_user(self, full_name, username, telegram_id):
-        sql = "INSERT INTO telegram_users (full_name, username, telegram_id, created_at, updated_at) VALUES($1, $2, $3, $4, $5) returning *"
-        return await self.execute(sql, full_name, username, telegram_id, datetime.now(), datetime.now(), fetchrow=True)
+    async def add_user(self, full_name, username, telegram_id, is_active=True):
+        sql = "INSERT INTO telegram_users (full_name, username, telegram_id, is_active, created_at, updated_at) VALUES($1, $2, $3, $4, $5, $6) returning *"
+        return await self.execute(sql, full_name, username, telegram_id, is_active, datetime.now(), datetime.now(), fetchrow=True)
 
     async def add_food(self, user_id: int, name: str):
         sql = "SELECT * FROM foods WHERE name=$1"
@@ -70,6 +70,11 @@ class Database:
         sql = "SELECT * FROM telegram_users"
         return await self.execute(sql, fetch=True)
 
+    async def filter_users(self, **kwargs):
+        sql = "SELECT * FROM telegram_users WHERE "
+        sql, parameters = self.format_args(sql, parameters=kwargs)
+        return await self.execute(sql, *parameters, fetch=True)
+
     async def select_all_foods(self):
         sql = "SELECT * FROM foods"
         return await self.execute(sql, fetch=True)
@@ -84,16 +89,20 @@ class Database:
         return await self.execute(sql, *parameters, fetchrow=True)
 
     async def count_users(self):
-        sql = "SELECT COUNT(*) FROM telegram_users"
-        return await self.execute(sql, fetchval=True)
+        sql = "SELECT COUNT(*) FROM telegram_users WHERE is_active=$1"
+        return await self.execute(sql, True, fetchval=True)
 
     async def update_user_username(self, username, telegram_id):
-        sql = "UPDATE telegram_users SET username=$1 WHERE telegram_id=$2"
-        return await self.execute(sql, username, telegram_id, execute=True)
+        sql = "UPDATE telegram_users SET username=$1 AND updated_at=$2  WHERE telegram_id=$3"
+        return await self.execute(sql, username, datetime.now(), telegram_id, execute=True)
 
     async def update_food_name(self, name, food_id):
-        sql = "UPDATE user_foods SET name=$1 WHERE id=$2"
-        return await self.execute(sql, name, food_id, execute=True)
+        sql = "UPDATE user_foods SET name=$1 AND updated_at=$2 WHERE id=$3"
+        return await self.execute(sql, name, datetime.now(), food_id, execute=True)
+
+    async def update_is_active(self, telegram_id, is_active=True):
+        sql = "UPDATE user_foods SET is_active=$1 AND updated_at=$2 WHERE telegram_id=$3"
+        return await self.execute(sql, is_active, datetime.now(), telegram_id, execute=True)
 
     async def delete_users(self):
         await self.execute("DELETE FROM telegram_users WHERE TRUE", execute=True)

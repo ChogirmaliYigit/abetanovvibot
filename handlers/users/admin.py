@@ -31,7 +31,7 @@ async def ask_ad_content(message: types.Message, state: FSMContext):
 
 @router.message(AdminState.ask_ad_content, IsBotAdminFilter(ADMINS))
 async def send_ad_to_users(message: types.Message, state: FSMContext):
-    users = await db.select_all_users()
+    users = await db.filter_users(is_active=True)
     count = 0
     for user in users:
         user_id = user.get("telegram_id")
@@ -40,6 +40,7 @@ async def send_ad_to_users(message: types.Message, state: FSMContext):
             count += 1
             await asyncio.sleep(0.05)
         except Exception as error:
+            await db.update_is_active(user_id, is_active=False)
             logging.info(f"Ad did not send to user: {user_id}. Error: {error}")
     await message.answer(text=f"Reklama {count} ta foydalauvchiga muvaffaqiyatli yuborildi.")
     await state.clear()
